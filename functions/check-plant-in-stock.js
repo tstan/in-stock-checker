@@ -4,8 +4,12 @@ import { SNS } from 'aws-sdk';
 const { PLANT_IN_STOCK_TOPIC, PLANT_URL } = process.env;
 
 export async function handler() {
+  console.log(`Get HTML from page ${PLANT_URL}`);
   const data = await requestPromise(PLANT_URL);
-  const inStock = parseInt(data.split('availability-only">\n\n')[1].split('<br>')[0]);
+  console.log('Got HTML response back');
+  const inStockString = data.split('availability-only">\n\n')[1].split('<br>')[0];
+  console.log(`In stock string split: ${inStockString}`);
+  const inStock = parseInt(inStockString);
   console.log(`Found ${inStock} in stock`);
   if (inStock > 0) {
     await sendPlantInStockNotification(inStock);

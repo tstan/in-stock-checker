@@ -28,7 +28,14 @@ custom:
 provider:
   name: aws
   runtime: nodejs12.x
-  region: us-west-2
+  region: us-east-1
+  timeout: 50
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - 'SNS:Publish'
+      Resource:
+        - !Ref PlantInStockTopic
   environment:
     PLANT_URL: 'https://www.logees.com/variegated-mexican-breadfruit-monstera-deliciosa-variegata.html'
     PLANT_IN_STOCK_TOPIC: !Ref PlantInStockTopic
@@ -38,7 +45,7 @@ functions:
     handler: functions/check-plant-in-stock.handler
     events:
       - schedule:
-          rate: rate(2 minutes)
+          rate: rate(1 minute)
 
 resources:
   Resources:

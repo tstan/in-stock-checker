@@ -2,29 +2,22 @@
 # introduced correctly the `async: true` invocationType for API Gateway events.
 frameworkVersion: '>=1.4.0'
 
-service: kasa-service #Update the service name
+service: in-stock-checker
 
 plugins:
   - serverless-webpack
   - serverless-prune-plugin
+  - serverless-offline
 
 custom:
   stage: ${opt:stage, self:provider.stage}
-  config: ${file(./serverless-config/${self:custom.stage}.json)} # Config from json files
   secrets:
     # Secrets from SSM are loaded here
-  fnSourceEnabled:
-    dev:
-    # Enable / disable function in DEV
-    production:
-      # Enable / disable function in PRODUCTION
-
   webpack: # used for serverless framework to bundle and send to aws
     webpackConfig: ./webpack.config.js
     includeModules:
       forceExclude:
         - aws-sdk
-
   pruneCount:
     dev: 2
     production: 3
@@ -37,9 +30,27 @@ provider:
   runtime: nodejs12.x
   region: us-west-2
   environment:
-    # Environment variables
+    PLANT_URL: 'https://www.logees.com/variegated-mexican-breadfruit-monstera-deliciosa-variegata.html'
+    PLANT_IN_STOCK_TOPIC: !Ref PlantInStockTopic
 
 functions:
-  ##############################
-  # List of function definitions
-  ##############################
+  checkPlantInStock:
+    handler: functions/check-plant-in-stock.handler
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+
+resources:
+  Resources:
+    PlantInStockTopic:
+      Type: 'AWS::SNS::Topic'
+      Properties:
+        DisplayName: Plant is in stock!
+        TopicName: plantInStock-${self:custom.stage}
+  Outputs:
+    PlantInStockTopicArn:
+      Description: The ARN for the PlantInStockTopic
+      Value:
+        Ref: PlantInStockTopic
+      Export:
+        Name: event:${self:custom.stage}:plantInStock

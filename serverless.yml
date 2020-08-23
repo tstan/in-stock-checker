@@ -1,0 +1,45 @@
+# It's important that the version of serverless is larger than 1.4 as this is the version that
+# introduced correctly the `async: true` invocationType for API Gateway events.
+frameworkVersion: '>=1.4.0'
+
+service: kasa-service #Update the service name
+
+plugins:
+  - serverless-webpack
+  - serverless-prune-plugin
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  config: ${file(./serverless-config/${self:custom.stage}.json)} # Config from json files
+  secrets:
+    # Secrets from SSM are loaded here
+  fnSourceEnabled:
+    dev:
+    # Enable / disable function in DEV
+    production:
+      # Enable / disable function in PRODUCTION
+
+  webpack: # used for serverless framework to bundle and send to aws
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+
+  pruneCount:
+    dev: 2
+    production: 3
+  prune:
+    automatic: true
+    number: ${self:custom.pruneCount.${self:custom.stage}}
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: us-west-2
+  environment:
+    # Environment variables
+
+functions:
+  ##############################
+  # List of function definitions
+  ##############################
